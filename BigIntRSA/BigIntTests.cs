@@ -37,7 +37,7 @@ namespace BigIntRSA
         [Test]
         public void UncorrectStringThrows()
         {
-            Assert.Throws<ArgumentException>(() =>
+            Assert.Throws<ArithmeticException>(() =>
             {
                 var q = new BigInt("fas231");
             });
@@ -48,7 +48,33 @@ namespace BigIntRSA
         {
             var q = new BigInt("123");
             var w = new BigInt("143");
-            Assert.AreEqual("31", w-q);
+            Assert.AreEqual(new BigInt(-20), (q-w));
+        }
+
+        [Test]
+        public void GCDTest()
+        {
+            var q = new BigInt(543);
+            var w = new BigInt(12);
+            Assert.AreEqual(new BigInt(3), q.gcd(w));
+        }
+
+        [Test]
+        public void Multiply()
+        {
+            Assert.AreEqual(new BigInt(64), new BigInt(8) * new BigInt(8));
+        }
+
+        [Test]
+        public void MultiplyWithNegative()
+        {
+            Assert.AreEqual(new BigInt(-25), new BigInt(5) * new BigInt(-5));
+        }
+
+        [Test]
+        public void MultiplyWithBothNegative()
+        {
+            Assert.AreEqual(new BigInt(3990), new BigInt(-42) * new BigInt(-95));
         }
     }
 }

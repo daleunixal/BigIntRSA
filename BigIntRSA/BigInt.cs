@@ -2,7 +2,6 @@
 
 public class BigInt
 {
-
     // Максимальная длинна хранения
     private const int maxLength = 70;
 
@@ -10,7 +9,7 @@ public class BigInt
     public int dataLength; // number of actual chars used
 
     /// <summary>
-    /// Default constructor for BigInteger of value 0
+    /// Базовый 0
     /// </summary>
     public BigInt()
     {
@@ -18,11 +17,7 @@ public class BigInt
         dataLength = 1;
     }
 
-
-    /// <summary>
-    /// Constructor (Default value provided by long)
-    /// </summary>
-    /// <param name="value">Turn the long value into BigInteger type</param>
+    
     public BigInt(long value)
     {
         data = new uint[maxLength];
@@ -53,11 +48,7 @@ public class BigInt
             dataLength = 1;
     }
 
-
-    /// <summary>
-    /// Constructor (Default value provided by ulong)
-    /// </summary>
-    /// <param name="value">Turn the unsigned long value into BigInteger type</param>
+    
     public BigInt(ulong value)
     {
         data = new uint[maxLength];
@@ -79,11 +70,7 @@ public class BigInt
             dataLength = 1;
     }
 
-
-    /// <summary>
-    /// Constructor (Default value provided by BigInteger)
-    /// </summary>
-    /// <param name="bi"></param>
+    
     public BigInt(BigInt bi)
     {
         data = new uint[maxLength];
@@ -96,14 +83,8 @@ public class BigInt
 
 
     /// <summary>
-    /// Constructor (Default value provided by a string of digits of the specified base)
+    /// Конструктор-парсер. Принимает строку и СИ строки
     /// </summary>
-    /// <example>
-    /// To initialize "a" with the default value of 1234 in base 10:
-    ///      BigInteger a = new BigInteger("1234", 10)
-    /// To initialize "a" with the default value of -0x1D4F in base 16:
-    ///      BigInteger a = new BigInteger("-1D4F", 16)
-    /// </example>
     /// 
     /// <param name="value">String value in the format of [sign][magnitude]</param>
     /// <param name="radix">The base of value</param>
@@ -119,30 +100,28 @@ public class BigInt
 
         for (var i = value.Length - 1; i >= limit; i--)
         {
-            var posVal = (int) value[i];
+            var posValue = (int) value[i];
 
-            if (posVal >= '0' && posVal <= '9')
-                posVal -= '0';
-            else if (posVal >= 'A' && posVal <= 'Z')
-                posVal = posVal - 'A' + 10;
+            if (posValue >= '0' && posValue <= '9')
+                posValue -= '0';
+            else if (posValue >= 'A' && posValue <= 'Z')
+                posValue = posValue - 'A' + 10;
             else
-                posVal = 9999999; // arbitrary large
+                posValue = 9999999; // произвольное сверх-большое
 
 
-            if (posVal >= radix)
+            if (posValue >= radix)
             {
                 throw new ArithmeticException("Invalid string in constructor.");
             }
-            else
-            {
-                if (value[0] == '-')
-                    posVal = -posVal;
 
-                result = result + multiplier * posVal;
+            if (value[0] == '-')
+                posValue = -posValue;
 
-                if (i - 1 >= limit)
-                    multiplier = multiplier * radix;
-            }
+            result = result + multiplier * posValue;
+
+            if (i - 1 >= limit)
+                multiplier = multiplier * radix;
         }
 
         if (value[0] == '-') // negative values
@@ -255,7 +234,7 @@ public class BigInt
             result.dataLength--;
 
 
-        // overflow check
+        // overflow проверка
         var lastPos = maxLength - 1;
         if ((bi1.data[lastPos] & 0x80000000) == (bi2.data[lastPos] & 0x80000000) &&
             (result.data[lastPos] & 0x80000000) != (bi1.data[lastPos] & 0x80000000))
@@ -400,57 +379,57 @@ public class BigInt
 
 
     /// <summary>
-    /// Overloading of multiplication operator
+    /// Перегрузка бинарного оператора умножения
     /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Result of the multiplication of 2 BigIntegers</returns>
-    public static BigInt operator *(BigInt bi1, BigInt bi2)
+    /// <param name="first">Первый BigInteger</param>
+    /// <param name="second">Второй BigInteger</param>
+    /// <returns>Произведение</returns>
+    public static BigInt operator *(BigInt first, BigInt second)
     {
         var lastPos = maxLength - 1;
         bool bi1Neg = false, bi2Neg = false;
 
-        // take the absolute value of the inputs
+        // 0x8 AND Sign проверка
         try
         {
-            if ((bi1.data[lastPos] & 0x80000000) != 0) // bi1 negative
+            if ((first.data[lastPos] & 0x80000000) != 0) // first negative
             {
                 bi1Neg = true;
-                bi1 = -bi1;
+                first = -first;
             }
 
-            if ((bi2.data[lastPos] & 0x80000000) != 0) // bi2 negative
+            if ((second.data[lastPos] & 0x80000000) != 0) // second negative
             {
                 bi2Neg = true;
-                bi2 = -bi2;
+                second = -second;
             }
         }
         catch (Exception)
         {
+            // ignored
         }
 
         var result = new BigInt();
 
-        // multiply the absolute values
+        // Умножение абсолютной велечины переменных
         try
         {
-            for (var i = 0; i < bi1.dataLength; i++)
+            for (var i = 0; i < first.dataLength; i++)
             {
-                if (bi1.data[i] == 0) continue;
+                if (first.data[i] == 0) continue;
 
                 ulong mcarry = 0;
-                for (int j = 0, k = i; j < bi2.dataLength; j++, k++)
+                for (int j = 0, k = i; j < second.dataLength; j++, k++)
                 {
-                    // k = i + j
-                    var val = (ulong) bi1.data[i] * (ulong) bi2.data[j] +
-                              (ulong) result.data[k] + mcarry;
+                    var val =  first.data[i] *  second.data[j] +
+                               result.data[k] + mcarry;
 
                     result.data[k] = (uint) (val & 0xFFFFFFFF);
                     mcarry = val >> 32;
                 }
 
                 if (mcarry != 0)
-                    result.data[i + bi2.dataLength] = (uint) mcarry;
+                    result.data[i + second.dataLength] = (uint) mcarry;
             }
         }
         catch (Exception)
@@ -459,7 +438,7 @@ public class BigInt
         }
 
 
-        result.dataLength = bi1.dataLength + bi2.dataLength;
+        result.dataLength = first.dataLength + second.dataLength;
         if (result.dataLength > maxLength)
             result.dataLength = maxLength;
 
@@ -471,28 +450,24 @@ public class BigInt
         {
             if (bi1Neg == bi2Neg || result.data[lastPos] != 0x80000000)
                 throw new ArithmeticException("Multiplication overflow.");
-            // handle the special case where multiplication produces
-            // a max negative number in 2's complement.
 
             if (result.dataLength == 1)
             {
                 return result;
             }
-            else
-            {
-                var isMaxNeg = true;
-                for (var i = 0; i < result.dataLength - 1 && isMaxNeg; i++)
-                    if (result.data[i] != 0)
-                        isMaxNeg = false;
 
-                if (isMaxNeg)
-                    return result;
-            }
+            var isMaxNeg = true;
+            for (var i = 0; i < result.dataLength - 1 && isMaxNeg; i++)
+                if (result.data[i] != 0)
+                    isMaxNeg = false;
+
+            if (isMaxNeg)
+                return result;
 
             throw new ArithmeticException("Multiplication overflow.");
         }
 
-        // if input has different signs, then result is -ve
+        // Определение итогового знака
         if (bi1Neg != bi2Neg)
             return -result;
 
@@ -517,7 +492,7 @@ public class BigInt
         return result;
     }
 
-    // least significant bits at lower part of buffer
+    // Младший байт
     private static int shiftLeft(uint[] buffer, int shiftVal)
     {
         var shiftAmount = 32;
@@ -589,7 +564,7 @@ public class BigInt
         return result;
     }
 
-
+    //Старший байт
     private static int shiftRight(uint[] buffer, int shiftVal)
     {
         var shiftAmount = 32;
@@ -743,14 +718,8 @@ public class BigInt
         var len = bi1.dataLength > bi2.dataLength ? bi1.dataLength : bi2.dataLength;
         for (pos = len - 1; pos >= 0 && bi1.data[pos] == bi2.data[pos]; pos--) ;
 
-        if (pos >= 0)
-        {
-            if (bi1.data[pos] > bi2.data[pos])
-                return true;
-            return false;
-        }
-
-        return false;
+        if (!(pos >= 0)) return false;
+        return bi1.data[pos] > bi2.data[pos];
     }
 
 
@@ -804,6 +773,64 @@ public class BigInt
         return bi1 == bi2 || bi1 < bi2;
     }
 
+
+    /// <summary>
+    /// Returns the modulo inverse of this
+    /// </summary>
+    /// <remarks>
+    /// Throws ArithmeticException if the inverse does not exist.  (i.e. gcd(this, modulus) != 1)
+    /// </remarks>
+    /// <param name="modulus"></param>
+    /// <returns>Modulo inverse of this</returns>
+    public BigInt modInverse(BigInt modulus)
+    {
+        BigInt[] p = {0, 1};
+        var q = new BigInt[2]; // quotients
+        BigInt[] r = {0, 0}; // remainders
+
+        var step = 0;
+
+        var a = modulus;
+        var b = this;
+
+        while (b.dataLength > 1 || b.dataLength == 1 && b.data[0] != 0)
+        {
+            var quotient = new BigInt();
+            var remainder = new BigInt();
+
+            if (step > 1)
+            {
+                var pval = (p[0] - p[1] * q[0]) % modulus;
+                p[0] = p[1];
+                p[1] = pval;
+            }
+
+            if (b.dataLength == 1)
+                singleByteDivide(a, b, quotient, remainder);
+            else
+                multiByteDivide(a, b, quotient, remainder);
+
+            q[0] = q[1];
+            r[0] = r[1];
+            q[1] = quotient;
+            r[1] = remainder;
+
+            a = b;
+            b = remainder;
+
+            step++;
+        }
+
+        if (r[0].dataLength > 1 || r[0].dataLength == 1 && r[0].data[0] != 1)
+            throw new ArithmeticException("No inverse!");
+
+        var result = (p[0] - p[1] * q[0]) % modulus;
+
+        if ((result.data[maxLength - 1] & 0x80000000) != 0)
+            result += modulus; // get the least positive modulus
+
+        return result;
+    }
 
     //***********************************************************************
     // Private function that supports the division of two numbers with
@@ -995,10 +1022,7 @@ public class BigInt
             divisorNeg = true;
         }
 
-        if (bi1 < bi2)
-        {
-            return quotient;
-        }
+        if (bi1 < bi2) return quotient;
 
         if (bi2.dataLength == 1)
             singleByteDivide(bi1, bi2, quotient, remainder);
@@ -1036,10 +1060,7 @@ public class BigInt
         if ((bi2.data[lastPos] & 0x80000000) != 0) // bi2 negative
             bi2 = -bi2;
 
-        if (bi1 < bi2)
-        {
-            return remainder;
-        }
+        if (bi1 < bi2) return remainder;
 
         if (bi2.dataLength == 1)
             singleByteDivide(bi1, bi2, quotient, remainder);
@@ -1153,7 +1174,6 @@ public class BigInt
 
         return result;
     }
-    
 
 
     /// <summary>

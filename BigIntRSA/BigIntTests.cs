@@ -81,11 +81,11 @@ namespace BigIntRSA
         public void SimpleDivide()
         {
             var veryBigNumber =
-                new BigInt("543312312312543534643524352423425345312312435435346346534634534543534534534534525");
+                new BigInt("5433123123125435346435243524234253453123124354353463465");
             var justALittleNum = new BigInt(5);
             var gcd = veryBigNumber.gcd(justALittleNum);
-            Assert.AreEqual(new BigInt("108662462462508706928704870484685069062462487087069269306926906908706906906906905"),
-                veryBigNumber / gcd);
+            Assert.AreEqual("58762461353",
+                (veryBigNumber / gcd).ToString());
         }
 
         [Test]
@@ -111,6 +111,18 @@ namespace BigIntRSA
             var first = new BigInt(3);
             var modulus = new BigInt(7);
             Assert.AreEqual(new BigInt(1), (first * first.modInverse(modulus))% modulus);
+        }
+
+        [Test]
+        public void EqualWhenSameValue()
+        {
+            Assert.IsTrue(new BigInt(32) == new BigInt(32));
+        }
+
+        [Test]
+        public void GratestTestValue()
+        {
+            Assert.IsTrue(new BigInt(234235) < new BigInt("4654865321354684513215154682313587684568732135483"));
         }
     }
 }

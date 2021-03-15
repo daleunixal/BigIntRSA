@@ -1266,4 +1266,185 @@ public class BigInt
             return s * Jacobi(b % a1, a1);
         }
     }
+    
+    public int bitCount()
+    {
+        while (dataLength > 1 && data[dataLength - 1] == 0)
+            dataLength--;
+
+        uint value = data[dataLength - 1];
+        uint mask = 0x80000000;
+        int bits = 32;
+
+        while (bits > 0 && (value & mask) == 0)
+        {
+            bits--;
+            mask >>= 1;
+        }
+        bits += ((dataLength - 1) << 5);
+
+        return bits == 0 ? 1 : bits;
+    }
+    
+    /// <summary>
+    /// Modulo Exponentiation
+    /// </summary>
+    /// <param name="exp">Exponential</param>
+    /// <param name="n">Modulo</param>
+    /// <returns>BigInteger result of raising this to the power of exp and then modulo n </returns>
+    public BigInt modPow(BigInt exp, BigInt n)
+    {
+        if ((exp.data[maxLength - 1] & 0x80000000) != 0)
+            throw (new ArithmeticException("Positive exponents only."));
+
+        BigInt resultNum = 1;
+        BigInt tempNum;
+        bool thisNegative = false;
+
+        if ((this.data[maxLength - 1] & 0x80000000) != 0)   // negative this
+        {
+            tempNum = -this % n;
+            thisNegative = true;
+        }
+        else
+            tempNum = this % n;  // ensures (tempNum * tempNum) < b^(2k)
+
+        if ((n.data[maxLength - 1] & 0x80000000) != 0)   // negative n
+            n = -n;
+
+        // calculate constant = b^(2k) / m
+        BigInt constant = new BigInt();
+
+        int i = n.dataLength << 1;
+        constant.data[i] = 0x00000001;
+        constant.dataLength = i + 1;
+
+        constant = constant / n;
+        int totalBits = exp.bitCount();
+        int count = 0;
+
+        // perform squaring and multiply exponentiation
+        for (int pos = 0; pos < exp.dataLength; pos++)
+        {
+            uint mask = 0x01;
+
+            for (int index = 0; index < 32; index++)
+            {
+                if ((exp.data[pos] & mask) != 0)
+                    resultNum = BarrettReduction(resultNum * tempNum, n, constant);
+
+                mask <<= 1;
+
+                tempNum = BarrettReduction(tempNum * tempNum, n, constant);
+
+
+                if (tempNum.dataLength == 1 && tempNum.data[0] == 1)
+                {
+                    if (thisNegative && (exp.data[0] & 0x1) != 0)    //odd exp
+                        return -resultNum;
+                    return resultNum;
+                }
+                count++;
+                if (count == totalBits)
+                    break;
+            }
+        }
+
+        if (thisNegative && (exp.data[0] & 0x1) != 0)    //odd exp
+            return -resultNum;
+
+        return resultNum;
+    }
+
+
+    /// <summary>
+    /// Fast calculation of modular reduction using Barrett's reduction
+    /// </summary>
+    /// <remarks>
+    /// Requires x &lt; b^(2k), where b is the base.  In this case, base is 2^32 (uint).
+    ///
+    /// Reference [4]
+    /// </remarks>
+    /// <param name="x"></param>
+    /// <param name="n"></param>
+    /// <param name="constant"></param>
+    /// <returns></returns>
+    private BigInt BarrettReduction(BigInt x, BigInt n, BigInt constant)
+    {
+        int k = n.dataLength,
+            kPlusOne = k + 1,
+            kMinusOne = k - 1;
+
+        BigInt q1 = new BigInt();
+
+        // q1 = x / b^(k-1)
+        for (int i = kMinusOne, j = 0; i < x.dataLength; i++, j++)
+            q1.data[j] = x.data[i];
+        q1.dataLength = x.dataLength - kMinusOne;
+        if (q1.dataLength <= 0)
+            q1.dataLength = 1;
+
+
+        BigInt q2 = q1 * constant;
+        BigInt q3 = new BigInt();
+
+        // q3 = q2 / b^(k+1)
+        for (int i = kPlusOne, j = 0; i < q2.dataLength; i++, j++)
+            q3.data[j] = q2.data[i];
+        q3.dataLength = q2.dataLength - kPlusOne;
+        if (q3.dataLength <= 0)
+            q3.dataLength = 1;
+
+
+        // r1 = x mod b^(k+1)
+        // i.e. keep the lowest (k+1) words
+        BigInt r1 = new BigInt();
+        int lengthToCopy = (x.dataLength > kPlusOne) ? kPlusOne : x.dataLength;
+        for (int i = 0; i < lengthToCopy; i++)
+            r1.data[i] = x.data[i];
+        r1.dataLength = lengthToCopy;
+
+
+        // r2 = (q3 * n) mod b^(k+1)
+        // partial multiplication of q3 and n
+
+        BigInt r2 = new BigInt();
+        for (int i = 0; i < q3.dataLength; i++)
+        {
+            if (q3.data[i] == 0) continue;
+
+            ulong mcarry = 0;
+            int t = i;
+            for (int j = 0; j < n.dataLength && t < kPlusOne; j++, t++)
+            {
+                // t = i + j
+                ulong val = ((ulong)q3.data[i] * (ulong)n.data[j]) +
+                             (ulong)r2.data[t] + mcarry;
+
+                r2.data[t] = (uint)(val & 0xFFFFFFFF);
+                mcarry = (val >> 32);
+            }
+
+            if (t < kPlusOne)
+                r2.data[t] = (uint)mcarry;
+        }
+        r2.dataLength = kPlusOne;
+        while (r2.dataLength > 1 && r2.data[r2.dataLength - 1] == 0)
+            r2.dataLength--;
+
+        r1 -= r2;
+        if ((r1.data[maxLength - 1] & 0x80000000) != 0)        // negative
+        {
+            BigInt val = new BigInt();
+            val.data[kPlusOne] = 0x00000001;
+            val.dataLength = kPlusOne + 1;
+            r1 += val;
+        }
+
+        while (r1 >= n)
+            r1 -= n;
+
+        return r1;
+    }
+
 }

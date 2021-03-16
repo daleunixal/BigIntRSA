@@ -17,14 +17,12 @@ public class BigInt
         dataLength = 1;
     }
 
-    
+
     public BigInt(long value)
     {
         data = new uint[maxLength];
         var tempVal = value;
 
-        // copy bytes from long to BigInteger without any assumption of
-        // the length of the long datatype
         dataLength = 0;
         while (value != 0 && dataLength < maxLength)
         {
@@ -48,7 +46,7 @@ public class BigInt
             dataLength = 1;
     }
 
-    
+
     public BigInt(ulong value)
     {
         data = new uint[maxLength];
@@ -70,7 +68,7 @@ public class BigInt
             dataLength = 1;
     }
 
-    
+
     public BigInt(BigInt bi)
     {
         data = new uint[maxLength];
@@ -85,9 +83,6 @@ public class BigInt
     /// <summary>
     /// Конструктор-парсер. Принимает строку и СИ строки
     /// </summary>
-    /// 
-    /// <param name="value">String value in the format of [sign][magnitude]</param>
-    /// <param name="radix">The base of value</param>
     public BigInt(string value, int radix = 10)
     {
         var multiplier = new BigInt(1);
@@ -110,10 +105,7 @@ public class BigInt
                 posValue = 9999999; // произвольное сверх-большое
 
 
-            if (posValue >= radix)
-            {
-                throw new ArithmeticException("Invalid string in constructor.");
-            }
+            if (posValue >= radix) throw new ArithmeticException("Invalid string in constructor.");
 
             if (value[0] == '-')
                 posValue = -posValue;
@@ -142,10 +134,6 @@ public class BigInt
         dataLength = result.dataLength;
     }
 
-    /// <summary>
-    ///  Constructor (Default value provided by an array of unsigned integers)
-    /// </summary>
-    /// <param name="inData">Array of unsigned integer</param>
     public BigInt(uint[] inData)
     {
         dataLength = inData.Length;
@@ -163,52 +151,30 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Cast a type long value to type BigInteger value
-    /// </summary>
-    /// <param name="value">A long value</param>
     public static implicit operator BigInt(long value)
     {
         return new BigInt(value);
     }
 
 
-    /// <summary>
-    /// Cast a type ulong value to type BigInteger value
-    /// </summary>
-    /// <param name="value">An unsigned long value</param>
     public static implicit operator BigInt(ulong value)
     {
         return new BigInt(value);
     }
 
 
-    /// <summary>
-    /// Cast a type int value to type BigInteger value
-    /// </summary>
-    /// <param name="value">An int value</param>
     public static implicit operator BigInt(int value)
     {
         return new BigInt((long) value);
     }
 
 
-    /// <summary>
-    /// Cast a type uint value to type BigInteger value
-    /// </summary>
-    /// <param name="value">An unsigned int value</param>
     public static implicit operator BigInt(uint value)
     {
         return new BigInt((ulong) value);
     }
 
 
-    /// <summary>
-    /// Overloading of addition operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Result of the addition of 2 BigIntegers</returns>
     public static BigInt operator +(BigInt bi1, BigInt bi2)
     {
         var result = new BigInt()
@@ -244,11 +210,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of the unary ++ operator, which increments BigInteger by 1
-    /// </summary>
-    /// <param name="bi1">A BigInteger</param>
-    /// <returns>Incremented BigInteger</returns>
     public static BigInt operator ++(BigInt bi1)
     {
         var result = new BigInt(bi1);
@@ -286,12 +247,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of subtraction operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Result of the subtraction of 2 BigIntegers</returns>
     public static BigInt operator -(BigInt bi1, BigInt bi2)
     {
         var result = new BigInt()
@@ -333,11 +288,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of the unary -- operator, decrements BigInteger by 1
-    /// </summary>
-    /// <param name="bi1">A BigInteger</param>
-    /// <returns>Decremented BigInteger</returns>
     public static BigInt operator --(BigInt bi1)
     {
         var result = new BigInt(bi1);
@@ -421,8 +371,8 @@ public class BigInt
                 ulong mcarry = 0;
                 for (int j = 0, k = i; j < second.dataLength; j++, k++)
                 {
-                    var val =  first.data[i] *  second.data[j] +
-                               result.data[k] + mcarry;
+                    var val = first.data[i] * second.data[j] +
+                              result.data[k] + mcarry;
 
                     result.data[k] = (uint) (val & 0xFFFFFFFF);
                     mcarry = val >> 32;
@@ -451,10 +401,7 @@ public class BigInt
             if (bi1Neg == bi2Neg || result.data[lastPos] != 0x80000000)
                 throw new ArithmeticException("Multiplication overflow.");
 
-            if (result.dataLength == 1)
-            {
-                return result;
-            }
+            if (result.dataLength == 1) return result;
 
             var isMaxNeg = true;
             for (var i = 0; i < result.dataLength - 1 && isMaxNeg; i++)
@@ -475,15 +422,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of the unary &lt;&lt; operator (left shift)
-    /// </summary>
-    /// <remarks>
-    /// Shifting by a negative number is an undefined behaviour (UB).
-    /// </remarks>
-    /// <param name="bi1">A BigInteger</param>
-    /// <param name="shiftVal">Left shift by shiftVal bit</param>
-    /// <returns>Left-shifted BigInteger</returns>
     public static BigInt operator <<(BigInt bi1, int shiftVal)
     {
         var result = new BigInt(bi1);
@@ -530,15 +468,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of the unary &gt;&gt; operator (right shift)
-    /// </summary>
-    /// <remarks>
-    /// Shifting by a negative number is an undefined behaviour (UB).
-    /// </remarks>
-    /// <param name="bi1">A BigInteger</param>
-    /// <param name="shiftVal">Right shift by shiftVal bit</param>
-    /// <returns>Right-shifted BigInteger</returns>
     public static BigInt operator >>(BigInt bi1, int shiftVal)
     {
         var result = new BigInt(bi1);
@@ -602,26 +531,17 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of the NEGATE operator (2's complement)
-    /// </summary>
-    /// <param name="bi1">A BigInteger</param>
-    /// <returns>Negated BigInteger or default BigInteger value if bi1 is 0</returns>
     public static BigInt operator -(BigInt bi1)
     {
-        // handle neg of zero separately since it'll cause an overflow
-        // if we proceed.
-
         if (bi1.dataLength == 1 && bi1.data[0] == 0)
             return new BigInt();
 
         var result = new BigInt(bi1);
 
-        // 1's complement
+
         for (var i = 0; i < maxLength; i++)
             result.data[i] = (uint) ~bi1.data[i];
 
-        // add one to result of 1's complement
         long val, carry = 1;
         var index = 0;
 
@@ -647,35 +567,18 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of equality operator, allows comparing 2 BigIntegers with == operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Boolean result of the comparison</returns>
     public static bool operator ==(BigInt bi1, BigInt bi2)
     {
         return bi1.Equals(bi2);
     }
 
 
-    /// <summary>
-    /// Overloading of not equal operator, allows comparing 2 BigIntegers with != operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Boolean result of the comparison</returns>
     public static bool operator !=(BigInt bi1, BigInt bi2)
     {
         return !bi1.Equals(bi2);
     }
 
 
-    /// <summary>
-    /// Overriding of Equals method, allows comparing BigInteger with an arbitary object
-    /// </summary>
-    /// <param name="o">Input object, to be casted into BigInteger type for comparison</param>
-    /// <returns>Boolean result of the comparison</returns>
     public override bool Equals(object o)
     {
         var bi = (BigInt) o;
@@ -695,13 +598,6 @@ public class BigInt
         return ToString().GetHashCode();
     }
 
-
-    /// <summary>
-    /// Overloading of greater than operator, allows comparing 2 BigIntegers with &gt; operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Boolean result of the comparison</returns>
     public static bool operator >(BigInt bi1, BigInt bi2)
     {
         var pos = maxLength - 1;
@@ -723,12 +619,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of greater than operator, allows comparing 2 BigIntegers with &lt; operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Boolean result of the comparison</returns>
     public static bool operator <(BigInt bi1, BigInt bi2)
     {
         var pos = maxLength - 1;
@@ -750,38 +640,18 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of greater than or equal to operator, allows comparing 2 BigIntegers with &gt;= operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Boolean result of the comparison</returns>
     public static bool operator >=(BigInt bi1, BigInt bi2)
     {
         return bi1 == bi2 || bi1 > bi2;
     }
 
 
-    /// <summary>
-    /// Overloading of less than or equal to operator, allows comparing 2 BigIntegers with &lt;= operator
-    /// </summary>
-    /// <param name="bi1">First BigInteger</param>
-    /// <param name="bi2">Second BigInteger</param>
-    /// <returns>Boolean result of the comparison</returns>
     public static bool operator <=(BigInt bi1, BigInt bi2)
     {
         return bi1 == bi2 || bi1 < bi2;
     }
 
 
-    /// <summary>
-    /// Returns the modulo inverse of this
-    /// </summary>
-    /// <remarks>
-    /// Throws ArithmeticException if the inverse does not exist.  (i.e. gcd(this, modulus) != 1)
-    /// </remarks>
-    /// <param name="modulus"></param>
-    /// <returns>Modulo inverse of this</returns>
     public BigInt modInverse(BigInt modulus)
     {
         BigInt[] p = {0, 1};
@@ -832,12 +702,6 @@ public class BigInt
         return result;
     }
 
-    //***********************************************************************
-    // Private function that supports the division of two numbers with
-    // a divisor that has more than 1 digit.
-    //
-    // Algorithm taken from [1]
-    //***********************************************************************
     private static void multiByteDivide(BigInt bi1, BigInt bi2,
         BigInt outQuotient, BigInt outRemainder)
     {
@@ -935,10 +799,6 @@ public class BigInt
     }
 
 
-    //***********************************************************************
-    // Private function that supports the division of two numbers with
-    // a divisor that has only 1 digit.
-    //***********************************************************************
     private static void singleByteDivide(BigInt bi1, BigInt bi2,
         BigInt outQuotient, BigInt outRemainder)
     {
@@ -995,13 +855,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of division operator
-    /// </summary>
-    /// <remarks>The dataLength of the divisor's absolute value must be less than maxLength</remarks>
-    /// <param name="bi1">Dividend</param>
-    /// <param name="bi2">Divisor</param>
-    /// <returns>Quotient of the division</returns>
     public static BigInt operator /(BigInt bi1, BigInt bi2)
     {
         var quotient = new BigInt();
@@ -1036,13 +889,6 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Overloading of modulus operator
-    /// </summary>
-    /// <remarks>The dataLength of the divisor's absolute value must be less than maxLength</remarks>
-    /// <param name="bi1">Dividend</param>
-    /// <param name="bi2">Divisor</param>
-    /// <returns>Remainder of the division</returns>
     public static BigInt operator %(BigInt bi1, BigInt bi2)
     {
         var quotient = new BigInt();
@@ -1074,32 +920,18 @@ public class BigInt
     }
 
 
-    /// <summary>
-    /// Compare this and a BigInteger and find the maximum one
-    /// </summary>
-    /// <param name="bi">BigInteger to be compared with this</param>
-    /// <returns>The bigger value of this and bi</returns>
     public BigInt max(BigInt bi)
     {
         return this > bi ? new BigInt(this) : new BigInt(bi);
     }
 
 
-    /// <summary>
-    /// Сравнивает два числа и возвращает наименьшее
-    /// </summary>
-    /// <param name="bi">BigInt для сравнения</param>
-    /// <returns>Наименьшее</returns>
     public BigInt min(BigInt bi)
     {
         return this < bi ? new BigInt(this) : new BigInt(bi);
     }
 
 
-    /// <summary>
-    /// Возвращает модуль числа
-    /// </summary>
-    /// <returns>Модуль числа</returns>
     public BigInt abs()
     {
         if ((data[maxLength - 1] & 0x80000000) != 0)
@@ -1122,7 +954,6 @@ public class BigInt
     /// Возвращает строковое представление числа в выбранной системе исчисления
     /// </summary>
     /// <param name="radix">СИ</param>
-    /// <returns>string representation of the BigInteger in [sign][magnitude] format</returns>
     public string ToString(int radix)
     {
         if (radix < 2 || radix > 36)
@@ -1266,69 +1097,67 @@ public class BigInt
             return s * Jacobi(b % a1, a1);
         }
     }
-    
-    public int bitCount()
+
+    private int bitCount()
     {
         while (dataLength > 1 && data[dataLength - 1] == 0)
             dataLength--;
 
-        uint value = data[dataLength - 1];
-        uint mask = 0x80000000;
-        int bits = 32;
+        var value = data[dataLength - 1];
+        var mask = 0x80000000;
+        var bits = 32;
 
         while (bits > 0 && (value & mask) == 0)
         {
             bits--;
             mask >>= 1;
         }
-        bits += ((dataLength - 1) << 5);
+
+        bits += (dataLength - 1) << 5;
 
         return bits == 0 ? 1 : bits;
     }
-    
-    /// <summary>
-    /// Modulo Exponentiation
-    /// </summary>
-    /// <param name="exp">Exponential</param>
-    /// <param name="n">Modulo</param>
-    /// <returns>BigInteger result of raising this to the power of exp and then modulo n </returns>
+
+
     public BigInt modPow(BigInt exp, BigInt n)
     {
         if ((exp.data[maxLength - 1] & 0x80000000) != 0)
-            throw (new ArithmeticException("Positive exponents only."));
+            throw new ArithmeticException("Positive exponents only.");
 
         BigInt resultNum = 1;
         BigInt tempNum;
-        bool thisNegative = false;
+        var thisNegative = false;
 
-        if ((this.data[maxLength - 1] & 0x80000000) != 0)   // negative this
+        if ((data[maxLength - 1] & 0x80000000) != 0) // negative this
         {
             tempNum = -this % n;
             thisNegative = true;
         }
         else
-            tempNum = this % n;  // ensures (tempNum * tempNum) < b^(2k)
+        {
+            tempNum = this % n; // ensures (tempNum * tempNum) < b^(2k)
+        }
 
-        if ((n.data[maxLength - 1] & 0x80000000) != 0)   // negative n
+        if ((n.data[maxLength - 1] & 0x80000000) != 0) // negative n
             n = -n;
 
         // calculate constant = b^(2k) / m
-        BigInt constant = new BigInt();
+        var constant = new BigInt();
 
-        int i = n.dataLength << 1;
+        var i = n.dataLength << 1;
         constant.data[i] = 0x00000001;
         constant.dataLength = i + 1;
 
         constant = constant / n;
-        int totalBits = exp.bitCount();
-        int count = 0;
+        var totalBits = exp.bitCount();
+        var count = 0;
 
         // perform squaring and multiply exponentiation
-        for (int pos = 0; pos < exp.dataLength; pos++)
+        for (var pos = 0; pos < exp.dataLength; pos++)
         {
             uint mask = 0x01;
 
-            for (int index = 0; index < 32; index++)
+            for (var index = 0; index < 32; index++)
             {
                 if ((exp.data[pos] & mask) != 0)
                     resultNum = BarrettReduction(resultNum * tempNum, n, constant);
@@ -1340,44 +1169,32 @@ public class BigInt
 
                 if (tempNum.dataLength == 1 && tempNum.data[0] == 1)
                 {
-                    if (thisNegative && (exp.data[0] & 0x1) != 0)    //odd exp
+                    if (thisNegative && (exp.data[0] & 0x1) != 0) //odd exp
                         return -resultNum;
                     return resultNum;
                 }
+
                 count++;
                 if (count == totalBits)
                     break;
             }
         }
 
-        if (thisNegative && (exp.data[0] & 0x1) != 0)    //odd exp
+        if (thisNegative && (exp.data[0] & 0x1) != 0) //odd exp
             return -resultNum;
 
         return resultNum;
     }
 
-
-    /// <summary>
-    /// Fast calculation of modular reduction using Barrett's reduction
-    /// </summary>
-    /// <remarks>
-    /// Requires x &lt; b^(2k), where b is the base.  In this case, base is 2^32 (uint).
-    ///
-    /// Reference [4]
-    /// </remarks>
-    /// <param name="x"></param>
-    /// <param name="n"></param>
-    /// <param name="constant"></param>
-    /// <returns></returns>
     private BigInt BarrettReduction(BigInt x, BigInt n, BigInt constant)
     {
         int k = n.dataLength,
             kPlusOne = k + 1,
             kMinusOne = k - 1;
 
-        BigInt q1 = new BigInt();
+        var q1 = new BigInt();
 
-        // q1 = x / b^(k-1)
+
         for (int i = kMinusOne, j = 0; i < x.dataLength; i++, j++)
             q1.data[j] = x.data[i];
         q1.dataLength = x.dataLength - kMinusOne;
@@ -1385,10 +1202,10 @@ public class BigInt
             q1.dataLength = 1;
 
 
-        BigInt q2 = q1 * constant;
-        BigInt q3 = new BigInt();
+        var q2 = q1 * constant;
+        var q3 = new BigInt();
 
-        // q3 = q2 / b^(k+1)
+
         for (int i = kPlusOne, j = 0; i < q2.dataLength; i++, j++)
             q3.data[j] = q2.data[i];
         q3.dataLength = q2.dataLength - kPlusOne;
@@ -1396,11 +1213,9 @@ public class BigInt
             q3.dataLength = 1;
 
 
-        // r1 = x mod b^(k+1)
-        // i.e. keep the lowest (k+1) words
-        BigInt r1 = new BigInt();
-        int lengthToCopy = (x.dataLength > kPlusOne) ? kPlusOne : x.dataLength;
-        for (int i = 0; i < lengthToCopy; i++)
+        var r1 = new BigInt();
+        var lengthToCopy = x.dataLength > kPlusOne ? kPlusOne : x.dataLength;
+        for (var i = 0; i < lengthToCopy; i++)
             r1.data[i] = x.data[i];
         r1.dataLength = lengthToCopy;
 
@@ -1408,34 +1223,35 @@ public class BigInt
         // r2 = (q3 * n) mod b^(k+1)
         // partial multiplication of q3 and n
 
-        BigInt r2 = new BigInt();
-        for (int i = 0; i < q3.dataLength; i++)
+        var r2 = new BigInt();
+        for (var i = 0; i < q3.dataLength; i++)
         {
             if (q3.data[i] == 0) continue;
 
             ulong mcarry = 0;
-            int t = i;
-            for (int j = 0; j < n.dataLength && t < kPlusOne; j++, t++)
+            var t = i;
+            for (var j = 0; j < n.dataLength && t < kPlusOne; j++, t++)
             {
                 // t = i + j
-                ulong val = ((ulong)q3.data[i] * (ulong)n.data[j]) +
-                             (ulong)r2.data[t] + mcarry;
+                var val = (ulong) q3.data[i] * (ulong) n.data[j] +
+                          (ulong) r2.data[t] + mcarry;
 
-                r2.data[t] = (uint)(val & 0xFFFFFFFF);
-                mcarry = (val >> 32);
+                r2.data[t] = (uint) (val & 0xFFFFFFFF);
+                mcarry = val >> 32;
             }
 
             if (t < kPlusOne)
-                r2.data[t] = (uint)mcarry;
+                r2.data[t] = (uint) mcarry;
         }
+
         r2.dataLength = kPlusOne;
         while (r2.dataLength > 1 && r2.data[r2.dataLength - 1] == 0)
             r2.dataLength--;
 
         r1 -= r2;
-        if ((r1.data[maxLength - 1] & 0x80000000) != 0)        // negative
+        if ((r1.data[maxLength - 1] & 0x80000000) != 0) // negative
         {
-            BigInt val = new BigInt();
+            var val = new BigInt();
             val.data[kPlusOne] = 0x00000001;
             val.dataLength = kPlusOne + 1;
             r1 += val;
@@ -1446,5 +1262,4 @@ public class BigInt
 
         return r1;
     }
-
 }

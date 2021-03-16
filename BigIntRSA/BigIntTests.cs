@@ -114,6 +114,12 @@ namespace BigIntRSA
         }
 
         [Test]
+        public void ModPowTest()
+        {
+            Assert.AreEqual(new BigInt(53442).modPow(new BigInt(123), new BigInt(32)), new BigInt(0));
+        }
+        
+        [Test]
         public void EqualWhenSameValue()
         {
             Assert.IsTrue(new BigInt(32) == new BigInt(32));
@@ -123,6 +129,12 @@ namespace BigIntRSA
         public void GratestTestValue()
         {
             Assert.IsTrue(new BigInt(234235) < new BigInt("4654865321354684513215154682313587684568732135483"));
+        }
+
+        [Test]
+        public void EqTst()
+        {
+            Assert.IsTrue(new BigInt(1) == 1);
         }
     }
 }

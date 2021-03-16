@@ -3,6 +3,7 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace BigIntRSA
@@ -11,9 +12,9 @@ namespace BigIntRSA
     {
         private UnicodeEncoding bc = new UnicodeEncoding();
         
-        public BigInt q;
-        public BigInt p;
-        public BigInt e;
+        public BigInt q = 6810011;
+        public BigInt p = 5037569;
+        public BigInt e = 65537;
         public BigInt d;
         public BigInt euler;
         public BigInt absoluteValue;
@@ -41,32 +42,8 @@ namespace BigIntRSA
             1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889, 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987,
             1993, 1997, 1999 };
 
-        public RSA_crypt(BigInt p, BigInt q, Action act = Action.John)
+        public RSA_crypt()
         {
-            if (p == 0 && act == Action.John)
-            {
-                var pseudoRandomPrimes = GetRandomPrime();
-                this.q = pseudoRandomPrimes[0];
-                this.p = pseudoRandomPrimes[1];
-                Init();
-                return;
-            }
-
-            if (p == 0 && act != Action.John)
-            {
-                throw new ArgumentException("Impossible to decrypt without KeyPair");
-            }
-
-            if (act == Action.Mary)
-            {
-                this.e = q;
-                this.absoluteValue = p;
-                return;
-            }
-
-
-            this.p = p;
-            this.q = q;
             Init();
         }
 
@@ -74,8 +51,8 @@ namespace BigIntRSA
         {
             absoluteValue = q * p;
             euler = (q - 1) * (p - 1);
-            e = primesBelow2000.Last(x => euler.gcd(new BigInt(x))==1);
-            d = e.modInverse(absoluteValue);
+            //e = primesBelow2000.Where(x => euler.gcd(new BigInt(x))== new BigInt(1)).ToList()[42];
+            d = e.modInverse(euler);
         }
 
         public BigInt[] GetPublicKey()
@@ -86,25 +63,24 @@ namespace BigIntRSA
         public string Encrypt(string item)
         {
             var sb = new StringBuilder();
-            var bytesArray = bc.GetBytes(item);
+            var bytesArray = item.ToCharArray().Select(c => Convert.ToInt32(c));
             foreach (var bt in bytesArray)
             {
-                if(bt == 0) continue;
                 var result = new BigInt(bt).modPow(e, absoluteValue);
-                sb.Append(bc.GetString(new []{Byte.Parse(result.ToString())}));
+                sb.Append(result+".");
             }
 
-            return sb.ToString();
+            return sb.ToString().TrimEnd('.');
         }
 
         public string Decrypt(string item)
         {
             var sb = new StringBuilder();
-            var bytesArray = bc.GetBytes(item);
-            foreach (var bt in bytesArray)
+            var bytesArray = item.Split('.');
+            foreach (var bt in bytesArray.Select(x => new BigInt(x)))
             {
-                var result = new BigInt(bt).modPow(d, absoluteValue);
-                sb.Append(bc.GetString(new[] {Byte.Parse(result.ToString())}));
+                var result = bt.modPow(d, absoluteValue).ToString();
+                sb.Append((char)int.Parse(result));
             }
 
             return sb.ToString();
@@ -112,8 +88,12 @@ namespace BigIntRSA
 
         private int[] GetRandomPrime()
         {
-            var q = new Random(new DateTime().Second).Next()%primesBelow2000.Length;
-            return new int[2]{primesBelow2000[q], primesBelow2000[q-1]};
+            return new int[2]{1123, 439};
+        }
+
+        public static string EncryptFile(string st)
+        {
+            return null;
         }
     }
 }

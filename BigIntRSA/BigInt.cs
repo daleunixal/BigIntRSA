@@ -3,7 +3,7 @@
 public class BigInt
 {
     // Максимальная длинна хранения
-    private const int maxLength = 70;
+    private const int maxLength = 42000;
 
     private uint[] data = null; // stores bytes from the Big Integer
     public int dataLength; // number of actual chars used

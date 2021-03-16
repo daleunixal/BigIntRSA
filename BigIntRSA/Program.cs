@@ -1,15 +1,28 @@
-﻿namespace BigIntRSA
+﻿using System;
+using System.Security.Cryptography;
+
+namespace BigIntRSA
 {
     internal class Program
     {
         public static void Main(string[] args)
         {
-            var John = new RSA_crypt(0,0);
-            var openKey = John.GetPublicKey();
-            var Mary = new RSA_crypt(openKey[0], openKey[1], RSA_crypt.Action.Mary);
-            var message = "hrono";
-            var res = Mary.Encrypt(message);
-            var decRes = John.Decrypt(res);
+
+
+            Console.WriteLine("e. Зашифровать файл");
+            Console.WriteLine("c. Зашифровать данные в консоли");
+            var userChoise = Console.ReadLine();
+            switch (userChoise)
+            {
+                case "e":
+                    Console.WriteLine("Введите путь к файлу");
+                    var encryptedFile = RSA_crypt.EncryptFile(Console.ReadLine());
+                    break;
+                case "c":
+                    Console.WriteLine(
+                        new RSA_crypt().Encrypt(Console.ReadLine()));
+                    break;
+            }
             
         }
     }
